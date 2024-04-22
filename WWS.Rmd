@@ -1,0 +1,188 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-11-22"
+---
+
+```{r}
+library(dplyr) 
+library(haven)
+library(readxl)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r}
+seven_wave_data <- read_excel("/Users/dmitry/Downloads/F00013215-WVS_Wave_7_Russian_Federation_Excel_v5.0.xlsx")
+
+seven_wave_data
+```
+```{r}
+
+seven_wave_data_cleaned <- seven_wave_data %>%
+  select("Q275A: Highest educational level: Respondent (country specific)", "Q288R: Income level (Recoded)", "Q260: Sex", "Q262: Age", "N_REGION_WVS: Region country specific", "Q49: Satisfaction with your life", 
+         "Q56: Standard of living comparing with your parents", "Q48: How much freedom of choice and control", "Q47: State of health (subjective)") 
+
+colnames(seven_wave_data_cleaned) <- c("education", "income", "sex", "age", "region", "sat", "parents_level", "freedom", "health")
+
+seven_wave_data_cleaned <- seven_wave_data_cleaned %>%
+  mutate(education = case_when(education == 643001 ~ 0,
+                               education == 643002 ~ 1,
+                               education == 643003 ~ 2,
+                               education == 643004 ~ 3,
+                               education == 643005 ~ 4,
+                               education == 643006 ~ 5,
+                               education == 643007 ~ 6,
+                               education == 643008 ~ 7,
+                               education == 643009 ~ 8,
+                               education == 643010 ~ 9,
+                               education == 643011 ~ 10)) %>%
+  mutate(income = case_when(   income == 1 ~ 1,
+                               income == 2 ~ 2,
+                               income == 3 ~ 3,
+                               income == -1 ~ NA,
+                               income == -2 ~ NA,
+                               income == -4 ~ NA,
+                               income == -5 ~ NA,)) %>%
+  mutate(sex = case_when(      sex == 1 ~ 1,
+                               sex == 2 ~ 2,
+                               sex == -2 ~ NA,
+                               sex == -4 ~ NA,
+                               sex == -5 ~ NA),) %>%
+  mutate(region = case_when(   region == 643002 ~ 1,
+                               region == 643003 ~ 2,
+                               region == 643006 ~ 3,
+                               region == 643007 ~ 4,
+                               region == 643008 ~ 5,
+                               region == 643011 ~ 6,
+                               region == 643012 ~ 7,
+                               region == 643013 ~ 8,)) %>%
+mutate(sat = case_when(        sat == 88 ~ NA,
+                               sat == 99 ~ NA,
+                               sat == -1 ~ NA,
+                               sat == 1 ~ 1,
+                               sat == 2 ~ 2,
+                               sat == 3 ~ 3,
+                               sat == 4 ~ 4,
+                               sat == 5 ~ 5,
+                               sat == 6 ~ 6,
+                               sat == 7 ~ 7,
+                               sat == 8 ~ 8,
+                               sat == 9 ~ 9,
+                               sat == 10 ~ 10,)) %>%
+  mutate(parents_level = case_when(    parents_level == 88 ~ NA,
+                               parents_level == 99 ~ NA,
+                               parents_level == -1 ~ NA,
+                               parents_level == 1 ~ 3,
+                               parents_level == 2 ~ 2,
+                               parents_level == 3 ~ 1,)) %>%
+  mutate(freedom = case_when(  freedom == 88 ~ NA,
+                               freedom == 99 ~ NA,
+                               freedom == -1 ~ NA,
+                               freedom == 1 ~ 1,
+                               freedom == 2 ~ 2,
+                               freedom == 3 ~ 3,
+                               freedom == 4 ~ 4,
+                               freedom == 5 ~ 5,
+                               freedom == 6 ~ 6,
+                               freedom == 7 ~ 7,
+                               freedom == 8 ~ 8,
+                               freedom == 9 ~ 9,
+                               freedom == 10 ~ 10,)) %>%
+  mutate(health = case_when(   health == 1 ~ 5,
+                               health == 2 ~ 4,
+                               health == 3 ~ 3,
+                               health == 4 ~ 2,
+                               health == 5 ~ 1,))
+
+seven_wave_data_cleaned <- seven_wave_data_cleaned %>%
+  filter(!is.na(education), !is.na(income), !is.na(sex), !is.na(age), !is.na(region), !is.na(sat), !is.na(parents_level), !is.na(freedom), !is.na(health))
+
+seven_wave_data_cleaned
+
+```
+
+
+```{r}
+
+ggplot(seven_wave_data_cleaned, aes(sat)) +    
+  geom_histogram(bins = 10, color="#0C4A6E", alpha=0.7)
+```
+по гистограмме можно сказать о том, что у большинства россиян наблюдается средний уровень удволетворенности жизни
+
+```{r}
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$freedom), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$health), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$parents_level), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$education), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$income), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$sex), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$age), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$sat), as.numeric(seven_wave_data_cleaned$region), use = "complete.obs") 
+```
+1) 0.4263261 средняя положительная корреляция между 0.3126079 удовлетворенностью и свободой выбора 
+2) 0.3126079 умеренная положительная между удовлетворенностью и состоянием здоровья 
+3) 0.1340952 слабая положительная между удовлетворенностью и уровнем жизни по сравнению с родителями
+4) 0.08279177 очень слабая положительная между удовлетворенностью и образованием
+5) 0.296569 умеренная положительная между удовлетворенностью и доходом
+6) -0.06707597 очень слабая отрицательная между удовлетворенностью и полом
+7) -0.1540167 слабая отрицательная между удовлетворенностью и возрастом
+8) -0.005227476 очень слабая отрицательная между удовлетворенностью регионом
+
+```{r}
+
+ggplot(seven_wave_data_cleaned, aes(freedom)) +
+  geom_histogram(bins = 10, color="#0C4A6E", alpha=0.7)
+``` 
+по гистограмме можно сказать о том, что у большинства россиян наблюдается средний показатель свободы выбора и контроля, однако выделяется значение "10" эту оценку дали примерно 220 респондентов 
+
+```{r}
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$sat), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$health), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$parents_level), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$education), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$income), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$sex), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$age), use = "complete.obs") 
+cor(as.numeric(seven_wave_data_cleaned$freedom), as.numeric(seven_wave_data_cleaned$region), use = "complete.obs")
+
+построение моделей 
+
+```{r} 
+#Парная регрессия между зависимой переменной и независимой переменной.
+model_1 <- lm(sat ~ freedom,data = seven_wave_data_cleaned)
+summary(model_1)  
+```
+
+```{r}
+#Множественная регрессия между зависимой переменной и независимой переменной + сэс + демографические характеристики
+model_2 <- lm(sat ~ freedom + education + income + sex + age + region, seven_wave_data_cleaned)
+summary(model_2) 
+```
+
+```{r}
+#Множественная регрессия между зависимой переменной и независимой переменной + одна контрольная переменная + сэс + демографические характеристики
+model_3 <- lm(sat ~ freedom + education + income + sex + age + region + health, data = seven_wave_data_cleaned)
+summary(model_3) 
+```
+
+```{r}
+#Множественная регрессия между зависимой переменной и независимой переменной + две контрольная переменная + сэс + демографические характеристики
+model_4 <- lm(sat ~ freedom + education + income + sex + age + region + health + parents_level, data = seven_wave_data_cleaned)
+summary(model_4) 
+```
+
+
+```{r}
+sint_full_titanic <- expand_grid(sat = mean(seven_wave_data_cleaned$sat),
+                                 freedom = unique(seven_wave_data_cleaned$freedom))
+
+sint_full_titanic <- sint_full_titanic %>% 
+  mutate(pred_log_odds = predict(model_1, .),
+         pred_probability = predict(model_1, ., type = "response"))
+
+sint_full_titanic %>% 
+  ggplot(., aes(sat, pred_probability, colour = sat)) +
+  geom_point()
+```
+
